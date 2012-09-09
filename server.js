@@ -73,7 +73,7 @@ var server = net.createServer(function(c) { //'connection' listener
   
   c.write('hello\r\n');
   outBuff = sord.queue('Howdy ho!',outBuff);
-  outBuff = sord.queue(art.instruct(),outBuff);
+  outBuff = sord.queue(art.banner(),outBuff);
 });
 server.listen(8124, function() { //'listening' listener
   console.log('server bound');
