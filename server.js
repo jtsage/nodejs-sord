@@ -29,9 +29,28 @@ var sord = {
     return buffer.concat(text.split(''));
   },
   buffWrite : function(conn, buffer) {
+    escseq = false;
     if ( typeof buffer !== 'object' ) { return false; }
     if ( buffer.length > 4 ) { 
-      conn.write(buffer.shift()+buffer.shift()+buffer.shift()+buffer.shift()+buffer.shift(),'utf8');
+      i = 0;
+      outString = '';
+      while ( i<5 ) {
+        outChar = buffer.shift(); i++;
+        if ( outChar === "\033" ) {
+          string = "\x1b"; escseq = true;
+          while (escseq === true ) {
+            outChar = buffer.shift(); i++;
+            code = outChar.charCodeAt(0);
+            string = string + outChar;
+            if ( ! ( code === 59 || ( code > 47 && code < 58 ) ) ) { 
+              escseq = false; outString = outString + string;
+            }
+          }
+        } else {
+          outString = outString + outChar;
+        }
+      }
+      conn.write(outString, 'utf8');
       return true;
     }
     if ( buffer.length > 0 ) { conn.write(buffer.shift(),'utf8'); return true; }
@@ -67,7 +86,7 @@ var sord = {
 
 var server = net.createServer(function(c) { //'connection' listener
   console.log('server connected');
-
+  
   var passer = { outBuff: [], inBuff: [], conn: c, int: '' };
   var writer = setInterval(function() { sord.buffWrite(c, passer.outBuff); }, 5);
   
@@ -91,11 +110,11 @@ var server = net.createServer(function(c) { //'connection' listener
         }
     });
   });
-  
-  c.write("Establishing Connection Details...  Setting Terminal...  Running...\r\n");
-  passer.outBuff = sord.queue("  `9W`1welcome to `9S`%.`9O`%.`9R`%.`9D`%.`7\r\n", passer.outBuff);
-  sord.pause(passer, show.Banner);
-  
+  c.write("Establishing Connection Details...  Setting Terminal...  Running... (Please Wait)\r\n");
+  setTimeout(function() {
+    passer.outBuff = sord.queue("  `9W`1elcome to `9S`%.`9O`%.`9R`%.`9D`%.    `7\r\n", passer.outBuff);
+    sord.pause(passer, show.Banner);
+  }, 1000);
 });
 server.listen(8124, function() { //'listening' listener
   console.log('server bound');
