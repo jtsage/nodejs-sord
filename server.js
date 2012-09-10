@@ -62,12 +62,13 @@ var server = net.createServer(function(c) { //'connection' listener
   c.on('data', function(data) {
     data.toString().split('').forEach(function(x) {
       var code = x.charCodeAt(0);
-        // Dump High ASCII, all control besides BKSPC & DEL
-        if ( code === 8 || code === 13 || ( code > 31 && code < 128 ) ) { 
-          passer.inBuff.queue(x);
-        }
+      // Dump High ASCII, all control besides BKSPC & DEL
+      if ( code === 8 || code === 13 || ( code > 31 && code < 128 ) ) { 
+        passer.inBuff.queue(x);
+      }
     });
   });
+  
   c.write("Establishing Connection Details...  Setting Terminal...  Running... (Please Wait)\r\n");
   setTimeout(function() {
     passer.outBuff.queue("  `9W`1elcome to `9S`%.`9O`%.`9R`%.`9D`%.    `7\r\n");
@@ -79,12 +80,12 @@ server.listen(8124, function() { //'listening' listener
 });
 
 // Here be dragons.
-show = {};
-
-show.Banner = function(pass) {
-  pass.outBuff.queue(sord.art.banner());
-  sord.pause(pass, somefunc);
-}
+var show = {
+  Banner : function(pass) {
+    pass.outBuff.queue(sord.art.banner());
+    sord.pause(pass, somefunc);
+  },
+};
 
 somefunc = function(pass, line) {
   console.log('ran');
