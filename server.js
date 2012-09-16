@@ -1,9 +1,14 @@
 var net = require('net');
-var sordBuffer = require('./inc/sordBuffer.js');
+var ansibuffer = require('nodejs-ansibuffer');
+var microdb = require('nodejs-microdb');
+var path = require('path');
+var datapath = path.join(__dirname, 'data');
+
 
 var sord = {
+  datapath: path.join(__dirname, 'data'),
   art: require('./inc/art.js'),
-  conf: require('./inc/config.js').sordConfig,
+  conf: new microdb({'file': path.join(datapath, 'config.db')}),
   readline : function(pass, callback, line, once, noprint) {
     if ( typeof once === 'undefined' || once === true ) { pass.inBuff.clear(); }
     if ( typeof line === 'undefined' ) { line = ''; }
@@ -37,14 +42,14 @@ var server = net.createServer(function(c) { //'connection' listener
   console.log('server connected');
   
   var passer = { 
-    outBuff: new sordBuffer(), 
-    inBuff: new sordBuffer(), 
+    outBuff: new ansibuffer.ANSIBuffer(),
+    inBuff: new ansibuffer.ANSIBuffer(),
     conn: c, 
     int: '' 
   };
   var writer = setInterval(
     function() { 
-      var tmp = passer.outBuff.read(); 
+      var tmp = passer.outBuff.bite(); 
       if ( tmp !== false ) { c.write(tmp); } 
     }, 5);
   
