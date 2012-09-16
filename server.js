@@ -23,9 +23,10 @@ var sord = {
       if ( code === 13 ) { 
         pass.conn.write("\r\n");
         if ( typeof extra === 'function' ) {
-          process.nextTick(function(pass,line,extra){callback(pass, line, extra)}(pass,line,extra)); return;
+          setTimeout(callback,0,pass,line,extra); return;
+          //process.nextTick(function(pass,line,extra){callback(pass, line, extra)}(pass,line,extra)); return;
         } else {
-          process.nextTick(callback(pass, line)); return;
+          setTimeout(callback,0,pass,line); return;
         }
       } 
       if ( code > 31 && code < 127 ) {
@@ -42,7 +43,7 @@ var sord = {
   },
   clrpause: function(pass, line, callback) {
     pass.outBuff.queue("\x1b[1A                        \x1b[1G");
-    callback(pass, line);
+    setTimeout(callback,0,pass,line);
   }
     
 };
