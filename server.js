@@ -23,9 +23,9 @@ var sord = {
       if ( code === 13 ) { 
         pass.conn.write("\r\n");
         if ( typeof extra === 'function' ) {
-          callback(pass, line, extra); return;
+          process.nextTick(function(pass,line,extra){callback(pass, line, extra)}(pass,line,extra)); return;
         } else {
-          callback(pass, line); return;
+          process.nextTick(callback(pass, line)); return;
         }
       } 
       if ( code > 31 && code < 127 ) {
