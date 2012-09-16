@@ -4,12 +4,12 @@ var microdb = require('nodejs-microdb');
 var path = require('path');
 var datapath = path.join(__dirname, 'data');
 
-
 var sord = {
   datapath: path.join(__dirname, 'data'),
-  art: require('./inc/art.js'),
+  art: require('./lib/art.js'),
+  acenter: ansibuffer.ANSICenter,
   conf: new microdb({'file': path.join(datapath, 'config.db')}),
-  readline : function(pass, callback, line, once, noprint) {
+  readline : function(pass, callback, line, once, noprint, extra) {
     if ( typeof once === 'undefined' || once === true ) { pass.inBuff.clear(); }
     if ( typeof line === 'undefined' ) { line = ''; }
     if ( typeof noprint === 'undefined' ) { noprint === false; }
@@ -22,7 +22,11 @@ var sord = {
       }
       if ( code === 13 ) { 
         pass.conn.write("\r\n");
-        callback(pass, line); return;
+        if ( typeof extra === 'function' ) {
+          callback(pass, line, extra); return;
+        } else {
+          callback(pass, line); return;
+        }
       } 
       if ( code > 31 && code < 127 ) {
         line = line + x;
@@ -30,12 +34,17 @@ var sord = {
         if ( noprint === 2 ) { pass.conn.write('*'); }
       }
     }
-    setTimeout(function () { sord.readline(pass, callback, line, false) }, 100);
+    setTimeout(function () { sord.readline(pass, callback, line, false, noprint, extra) }, 100);
   },
   pause: function (pass, callback) {
     pass.outBuff.queue(" `%[`2-`0=`2- `0P`2ress `0E`2nter -`0=`2-`%]`7 ");
-    sord.readline(pass, callback, '', true, false);
+    sord.readline(pass, sord.clrpause, '', true, false, callback);
+  },
+  clrpause: function(pass, line, callback) {
+    pass.outBuff.queue("\x1b[1A                        \x1b[1G");
+    callback(pass, line);
   }
+    
 };
 
 var server = net.createServer(function(c) { //'connection' listener
@@ -76,20 +85,24 @@ var server = net.createServer(function(c) { //'connection' listener
   
   c.write("Establishing Connection Details...  Setting Terminal...  Running... (Please Wait)\r\n");
   setTimeout(function() {
-    passer.outBuff.queue("  `9W`1elcome to `9S`%.`9O`%.`9R`%.`9D`%.    `7\r\n");
+    passer.outBuff.center(" `7-`%=`7- `9W`1elcome to `9S`%.`9O`%.`9R`%.`9D`%. `7-`%=`7-  `7\r\n");
     sord.pause(passer, show.Banner);
   }, 1000);
 });
-server.listen(8124, function() { //'listening' listener
+server.listen(sord.conf.data.port, function() { //'listening' listener
   console.log('server bound');
 });
 
 // Here be dragons.
 var show = {
   Banner : function(pass) {
-    pass.outBuff.queue(sord.art.banner());
-    sord.pause(pass, somefunc);
+    //pass.outBuff.queue(sord.art.banner());
+    sord.pause(pass, show.Welcome);
   },
+  Welcome: function(pass) {
+    pass.outBuff.queue(sord.art.welcome(sord));
+    sord.pause(pass, somefunc);
+  }
 };
 
 somefunc = function(pass, line) {
