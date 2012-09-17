@@ -1,33 +1,48 @@
+user = {
+  "mail":[ // Array of objects
+    {
+      'from': 'someuser', // Name
+      'date': Date(),
+      'text': 'blah, blah' // Message
+    },
+  ],
+  "online": 0, 
+  "username":"jtsage",
+  "password":"darcyeh",
+  "fullname":"J.T.Sage",
+  "exp":0,
+  "last":0,  // Last NUMERIC day logged in (based on game start)
+  "class":1,
+  "level":1,
+  "sex":1,
+  "flirt":0,
+  "sung":0,
+  "master":0,
+  "atinn":0,
+  "horse":0,
+  "fairy":0,
+  "ffight":30,
+  "pfight":5,
+  "gold":500,
+  "bank":0,
+  "gems":0,
+  "charm":1,
+  "spcl1":1,
+  "spcl2":0,
+  "spcl3":0,
+  "use1":1,
+  "use2":0,
+  "use3":0,
+  "strong":10,
+  "defence":1,
+  "hp":20,
+  "hpmax":20,
+  "weapon":1,
+  "armor":1,
+  "pkill":0,
+  "dkill":0,
+  "fuck":0,
+  "alive":1
+};
 
-  this.createUser = function(oride) {
-    var defaults = {
-      name : 'Anonymous',
-      login: '',
-      pass: '',
-      cls: 1,
-      sex: 1,
-      flirt: 0,
-      sung: 0,
-      master: 0,
-      atinn: 0,
-      horse: 0,
-      fairy: 0,
-      ffight: 30,
-      pfight: 5,
-      gems: 0,
-      gold: 0, bank: 0,
-      level: 0,
-      charm: 0,
-      spclm: 0, spcld: 0, spclt: 0,
-      usem: 0, used: 0, uset: 0,
-      dragon: 0,
-      str: 0, defense: 0,
-      exp: 0, hp: 0, hpmax: 0,
-      weapon: 0, armor: 0,
-      pkill: 0, dkill: 0,
-      fuck: 0, alive: 1 };
-    if ( typeof oride === 'object' ) {
-      for ( var x in oride ) { defaults[x] = oride[x]; }
-    }
-    this.addRecord(defaults);
-  }
+
