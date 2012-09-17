@@ -23,48 +23,63 @@ var sord = {
       var thisChoice = pass.inBuff.shift();
       var thisCode = thisChoice.charCodeAt(0);
       if ( thisCode > 31 && thisCode < 127 ) {
-        pass.conn.write(thisChoice.toUpperCase() + "\r\n");
+        pass.outBuff.queue(thisChoice.toUpperCase() + "\r\n");
         setTimeout(callback,0,pass,thisChoice.toUpperCase()); return;
       }
     }
     setTimeout(function () { sord.menuwait(pass, callback) }, 100);
   },
-  readline : function(pass, callback, line, once, noprint, extra) {
-    if ( typeof once === 'undefined' || once === true ) { pass.inBuff.clear(); }
-    if ( typeof line === 'undefined' ) { line = ''; }
-    if ( typeof noprint === 'undefined' ) { noprint === false; }
+  readline : function(pass, callback, opts) {
+    if ( typeof opts.once === 'undefined' || opts.once === false ) { 
+      pass.inBuff.clear(); 
+      opts.once = true;
+      opts.line = '';
+    }
+    if ( typeof opts.line === 'undefined' ) { opts.line = ''; }
+    if ( typeof opts.noprint === 'undefined' ) { opts.noprint = false; }
+    if ( typeof opts.passopt === 'undefined' ) { opts.passopt = false; }
+    
     while ( pass.inBuff.length > 0 ) { 
       var x = pass.inBuff.shift();
-      var code = x.charCodeAt(0);
+      var code = ( opts.noprint === 3 ) ? 13 : x.charCodeAt(0);
+      
       if ( (code === 8 || code === 127) && line.length > 0 ) { 
-        line = line.substr(0,line.length-1); 
+        opts.line = opts.line.substr(0,line.length-1); 
         pass.conn.write("\x1b[1D \x1b[1D");
       }
       if ( code === 13 ) { 
         pass.conn.write("\r\n");
-        if ( typeof extra === 'function' ) {
-          setTimeout(callback,0,pass,line,extra); return;
+        if ( opts.passopt === true ) {
+          opts.once = false;
+          setTimeout(callback,0,pass,opts.line,opts); return;
         } else {
-          setTimeout(callback,0,pass,line); return;
+          setTimeout(callback,0,pass,opts.line); return;
         }
       } 
       if ( code > 31 && code < 127 ) {
-        line = line + x;
-        if ( noprint === false ) { pass.conn.write(x); }
-        if ( noprint === 2 ) { pass.conn.write('*'); }
+        opts.line = opts.line + x;
+        if ( opts.noprint === false ) { pass.conn.write(x); }
+        if ( opts.noprint === 2 ) { pass.conn.write('*'); }
       }
     }
     setTimeout(function () { 
-      sord.readline(pass, callback, line, false, noprint, extra) 
+      sord.readline(pass, callback, opts) 
     }, 100);
   },
   pause: function (pass, callback) {
-    pass.outBuff.queue(" `%[`2-`0=`2- `0P`2ress `0E`2nter -`0=`2-`%]`7 ");
-    sord.readline(pass, this.clrpause, '', true, false, callback);
+    pass.outBuff.queue(" `%[`2-`0=`2- `0P`2ress `0A`2ny `0K`2ey -`0=`2-`%]`7 ");
+    sord.readline(pass, this.clrpause, {'noprint':3, 'nextcall':callback, 'passopt': true});
   },
-  clrpause: function(pass, line, callback) {
+  clrpause: function(pass, line, opts) {
     pass.outBuff.queue("\x1b[1A                        \x1b[1G");
-    setTimeout(callback,0,pass,line);
+    setTimeout(opts.nextcall,0,pass,line);
+  },
+  killconn: function(pass) {
+    var exitQuote = ['The black thing inside rejoices at your departure.', 'The very earth groans at your depature.', 'The very trees seem to moan as you leave.', 'Echoing screams fill the wastelands as you close your eyes.', 'Your very soul aches as you wake up from your favorite dream.'];
+    var thisQuote = Math.floor(Math.random()*exitQuote.length);
+    pass.outBuff.queue(pass.sord.util.casebold("\r\n\r\n   "+exitQuote[thisQuote]+"\r\n\r\n", 7));
+    pass.outBuff.queue("NO CARRIER\r\n");
+    setTimeout(function() {pass.conn.end(pass.outBuff.dump());}, 2000);
   }
 };
 
@@ -77,7 +92,8 @@ var server = net.createServer(function(c) { //'connection' listener
     conn: c,
     startTime: new Date(),
     sord: sord, 
-    int: '' 
+    int: '',
+    currentUser: false
   };
   var writer = setInterval(
     function() { 
@@ -124,7 +140,7 @@ server.listen(sord.conf.data.port, function() { //'listening' listener
 // Here be dragons.
 var show = {
   Banner : function(pass) {
-    pass.outBuff.queue(sord.art.banner());
+    //pass.outBuff.queue(sord.art.banner());
     sord.pause(pass, show.Welcome);
   },
   Welcome: function(pass) {
