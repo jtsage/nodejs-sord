@@ -1,4 +1,7 @@
 "use strict";
+
+global.sordDebug = true;
+
 var net = require('net');
 var ansibuffer = require('nodejs-ansibuffer');
 var microdb = require('nodejs-microdb');
@@ -23,8 +26,8 @@ var sord = {
   dirt: new microdb({'file':path.join(datapath, 'dirt.db'), 'datatype':0, 'maxrec':10}),
 
   
-  menuwait: function(pass, callback, menu ) {
-    if ( typeof menu === 'function' ) { pass.outBuff.queue(menu()); }
+  menuwait: function(pass, callback, menu, menuopt ) {
+    if ( typeof menu === 'function' ) { pass.outBuff.queue(menu(menuopt)); }
     if ( typeof menu === 'string' ) { pass.outBuff.queue(menu); }
     if ( pass.inBuff.length > 0 ) {
       var thisChoice = pass.inBuff.shift();
@@ -52,10 +55,10 @@ var sord = {
       
       if ( (code === 8 || code === 127) && line.length > 0 ) { 
         opts.line = opts.line.substr(0,line.length-1); 
-        pass.conn.write("\x1b[1D \x1b[1D");
+        pass.outBuff.queue("\x1b[1D \x1b[1D");
       }
       if ( code === 13 ) { 
-        pass.conn.write("\r\n");
+        pass.outBuff.queue("\r\n");
         if ( opts.passopt === true ) {
           opts.once = false;
           setTimeout(callback,0,pass,opts.line,opts); return;
@@ -65,8 +68,8 @@ var sord = {
       } 
       if ( code > 31 && code < 127 ) {
         opts.line = opts.line + x;
-        if ( opts.noprint === false ) { pass.conn.write(x); }
-        if ( opts.noprint === 2 ) { pass.conn.write('*'); }
+        if ( opts.noprint === false ) { pass.outBuff.queue(x); }
+        if ( opts.noprint === 2 ) { pass.outBuff.queue('*'); }
       }
     }
     setTimeout(function () { 
@@ -84,9 +87,17 @@ var sord = {
   killconn: function(pass) {
     var exitQuote = ['The black thing inside rejoices at your departure.', 'The very earth groans at your depature.', 'The very trees seem to moan as you leave.', 'Echoing screams fill the wastelands as you close your eyes.', 'Your very soul aches as you wake up from your favorite dream.'];
     var thisQuote = Math.floor(Math.random()*exitQuote.length);
+    pass.sord.users.data[pass.curUser].online = 0;
     pass.outBuff.queue(pass.sord.util.casebold("\r\n\r\n   "+exitQuote[thisQuote]+"\r\n\r\n", 7));
     pass.outBuff.queue("NO CARRIER\r\n");
     setTimeout(function() {pass.conn.end(pass.outBuff.dump());}, 2000);
+  },
+  gettime: function(strt) {
+    var ed = new Date();
+    var diff = ( ed - strt ) / 1000;
+    var min = parseInt((diff / 60), 10);
+    var sec = parseInt((diff % 60), 10);
+    return ('`7' + min + '`%:`7' + ((sec<10)?'0':'') + sec );
   }
 };
 
@@ -99,8 +110,8 @@ var server = net.createServer(function(c) { //'connection' listener
     conn: c,
     startTime: new Date(),
     sord: sord, 
-    int: '',
-    currentUser: false
+    curUser: false,
+    xpert: false,
   };
   var writer = setInterval(
     function() { 
@@ -147,7 +158,9 @@ server.listen(sord.conf.data.port, function() { //'listening' listener
 // Here be dragons.
 var show = {
   Banner : function(pass) {
-    //pass.outBuff.queue(sord.art.banner());
+    if ( global.sordDebug !== true ) {
+      pass.outBuff.queue(sord.art.banner());
+    }
     sord.pause(pass, show.Welcome);
   },
   Welcome: function(pass) {
