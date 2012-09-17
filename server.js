@@ -15,6 +15,13 @@ var sord = {
   
   conf: new microdb({'file': path.join(datapath, 'config.db')}),
   users: new microdb({'file': path.join(datapath, 'users.db')}),
+  gamedata: new microdb({'file': path.join(datapath, 'gamedata.db'), 'savetime': 0}),
+  darkhorse: new microdb({'file': path.join(datapath, 'darkhorse.db'), 'datatype': 0, 'maxrec': 12}),
+  patrons: new microdb({'file': path.join(datapath, 'patrons.db'), 'datatype': 0, 'maxrec': 12}),
+  daily: new microdb({'file': path.join(datapath, 'dailyhap.db'), 'datatype': 0, 'maxrec': 12}),
+  flowers: new microdb({'file':path.join(datapath, 'flowers.db'), 'datatype':0, 'maxrec':10}),
+  dirt: new microdb({'file':path.join(datapath, 'dirt.db'), 'datatype':0, 'maxrec':10}),
+
   
   menuwait: function(pass, callback, menu ) {
     if ( typeof menu === 'function' ) { pass.outBuff.queue(menu()); }
