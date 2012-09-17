@@ -6,6 +6,17 @@ var gamedata = new microdb({'file':'gamedata.db', 'savetime': 0});
 var darkhorse = new microdb({'file':'darkhorse.db', 'datatype': 0, 'maxrec': 12});
 var patrons = new microdb({'file': 'patrons.db', 'datatype': 0, 'maxrec': 12});
 var daily = new microdb({'file':'dailyhap.db', 'datatype': 0, 'maxrec': 12});
+var flowers = new microdb({'file':'flowers.db', 'datatype':0, 'maxrec':10});
+var dirt = new microdb({'file':'dirt.db', 'datatype':0, 'maxrec':10});
+
+dirt.add(['Jack the `9Ripper', '`1Mighty quiet around here...']);
+dirt.flush();
+
+flowers.add(['`%Fairy Tisha', '`0Oooh!  I love flowers!  And I love to kiss.']);
+flowers.add(['`%Fairy Nolan', '`0Yes!  I\'m glad humans can\'t read our flowers!']);
+flowers.add(['`%Fairy Glimmer', '`0Agreed.  They are all big dumb animals.']);
+flowers.flush();
+
 
 // Init DBasees.
 
