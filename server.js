@@ -44,7 +44,6 @@ var sord = {
         pass.conn.write("\r\n");
         if ( typeof extra === 'function' ) {
           setTimeout(callback,0,pass,line,extra); return;
-          //process.nextTick(function(pass,line,extra){callback(pass, line, extra)}(pass,line,extra)); return;
         } else {
           setTimeout(callback,0,pass,line); return;
         }
@@ -55,7 +54,9 @@ var sord = {
         if ( noprint === 2 ) { pass.conn.write('*'); }
       }
     }
-    setTimeout(function () { sord.readline(pass, callback, line, false, noprint, extra) }, 100);
+    setTimeout(function () { 
+      sord.readline(pass, callback, line, false, noprint, extra) 
+    }, 100);
   },
   pause: function (pass, callback) {
     pass.outBuff.queue(" `%[`2-`0=`2- `0P`2ress `0E`2nter -`0=`2-`%]`7 ");
@@ -65,16 +66,16 @@ var sord = {
     pass.outBuff.queue("\x1b[1A                        \x1b[1G");
     setTimeout(callback,0,pass,line);
   }
-    
 };
 
 var server = net.createServer(function(c) { //'connection' listener
-  console.log('server connected');
+  console.log('server connected from ' +  c.remoteAddress);
   
   var passer = { 
     outBuff: new ansibuffer.ANSIBuffer(),
     inBuff: new ansibuffer.ANSIBuffer(),
     conn: c,
+    startTime: new Date(),
     sord: sord, 
     int: '' 
   };
@@ -93,7 +94,8 @@ var server = net.createServer(function(c) { //'connection' listener
   
   c.on('end', function() {
     clearInterval(writer);
-    console.log('server disconnected');
+    sord.users.flush();
+    console.log('Server disconnected');
   });
   c.on('data', function(data) {
     data.toString().split('').forEach(function(x) {
@@ -105,21 +107,24 @@ var server = net.createServer(function(c) { //'connection' listener
     });
   });
   
-  c.write("Establishing Connection Details...  Setting Terminal...  Running... (Please Wait)\r\n");
+  c.write("Establishing Connection...  Starting... (Please Wait)\r\n");
   setTimeout(function() {
-    passer.outBuff.center(" `7-`%=`7- `9W`1elcome to `9S`%.`9O`%.`9R`%.`9D`%. `7-`%=`7-  `7\r\n");
-    //sord.pause(passer, show.Banner);
-    sord.pause(passer, show.Welcome);
+    passer.outBuff.center(
+      " `4-`@=`%=`@=`4- " +
+      "`9W`1elcome to `9S`%.`9O`%.`9R`%.`9D`%." +
+      " `4-`@=`%=`@=`4- `7\r\n"
+    );
+    sord.pause(passer, show.Banner);
   }, 1000);
 });
 server.listen(sord.conf.data.port, function() { //'listening' listener
-  console.log('server bound');
+  console.log('--Server bound to port ' + sord.conf.data.port);
 });
 
 // Here be dragons.
 var show = {
   Banner : function(pass) {
-    //pass.outBuff.queue(sord.art.banner());
+    pass.outBuff.queue(sord.art.banner());
     sord.pause(pass, show.Welcome);
   },
   Welcome: function(pass) {
@@ -127,9 +132,4 @@ var show = {
     setTimeout(sord.menuwait,0,pass,sord.menuctrl.prolouge);
   }
 };
-
-var somefunc = function(pass, line) {
-  console.log('ran');
-  pass.outBuff.queue('`4You Said: `2' + line);
-}
 
