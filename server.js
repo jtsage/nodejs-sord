@@ -26,18 +26,29 @@ var sord = {
   dirt: new microdb({'file':path.join(datapath, 'dirt.db'), 'datatype':0, 'maxrec':10}),
 
   
-  menuwait: function(pass, callback, menu, menuopt ) {
+  menuwait: function(pass, callback, menu, menuopt, validopt, validconv ) {
+    var validcodes = [];
+    if ( typeof validconv === 'undefined' ) { validconv = true; }
     if ( typeof menu === 'function' ) { pass.outBuff.queue(menu(menuopt)); }
     if ( typeof menu === 'string' ) { pass.outBuff.queue(menu); }
+    if ( typeof validconv === 'undefined' || validconv === true ) {
+      if ( typeof validopt === 'undefined' ) {
+        for ( var i = 32; i < 127; i++ ) { validcodes.push(i); }
+      } else {
+        for ( var i = 0; i < validopt.length; i++ ) { validcodes.push(validopt[i].charCodeAt(0)); }
+      }
+    } else {
+      validcodes = validopt;
+    }
     if ( pass.inBuff.length > 0 ) {
       var thisChoice = pass.inBuff.shift();
-      var thisCode = thisChoice.charCodeAt(0);
-      if ( thisCode > 31 && thisCode < 127 ) {
+      var thisCode = thisChoice.toUpperCase().charCodeAt(0);
+      if ( validcodes.indexOf(thisCode) > -1 ) {
         pass.outBuff.queue(thisChoice.toUpperCase() + "\r\n");
         setTimeout(callback,0,pass,thisChoice.toUpperCase()); return;
       }
     }
-    setTimeout(function () { sord.menuwait(pass, callback) }, 100);
+    setTimeout(function () { sord.menuwait(pass, callback, false, false, validcodes, false) }, 100);
   },
   readline : function(pass, callback, opts) {
     if ( typeof opts.once === 'undefined' || opts.once === false ) { 
@@ -87,7 +98,9 @@ var sord = {
   killconn: function(pass) {
     var exitQuote = ['The black thing inside rejoices at your departure.', 'The very earth groans at your depature.', 'The very trees seem to moan as you leave.', 'Echoing screams fill the wastelands as you close your eyes.', 'Your very soul aches as you wake up from your favorite dream.'];
     var thisQuote = Math.floor(Math.random()*exitQuote.length);
-    pass.sord.users.data[pass.curUser].online = 0;
+    if ( pass.curUser !== false ) {
+      pass.sord.users.data[pass.curUser].online = 0;
+    }
     pass.outBuff.queue(pass.sord.util.casebold("\r\n\r\n   "+exitQuote[thisQuote]+"\r\n\r\n", 7));
     pass.outBuff.queue("NO CARRIER\r\n");
     setTimeout(function() {pass.conn.end(pass.outBuff.dump());}, 2000);
@@ -165,7 +178,7 @@ var show = {
   },
   Welcome: function(pass) {
     pass.outBuff.queue(sord.art.welcome(sord));
-    setTimeout(sord.menuwait,0,pass,sord.menuctrl.prolouge);
+    setTimeout(sord.menuwait,0,pass,sord.menuctrl.prolouge,false,false,['E','L','I','Q']);
   }
 };
 
